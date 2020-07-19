@@ -10,9 +10,14 @@ class Toggle extends React.Component {
   // 🐨 We're going to need some static defaultProps here to allow
   // people to pass a `initialOn` prop.
   initialState = {on: this.props.initialOn}
-
+  reset = () => {
+    this.setState(this.initialState, () =>
+      this.props.onReset(this.state.on),
+    )
+  }
   static defaultProps = {
     initialOn: false,
+    onReset: () => {},
   }
   //
   // 🐨 Rather than initializing state to have on as false,
@@ -27,11 +32,6 @@ class Toggle extends React.Component {
       ({on}) => ({on: !on}),
       () => this.props.onToggle(this.state.on),
     )
-  reset = () => {
-    this.setState(this.initialState, () =>
-      this.props.onReset(this.state.on),
-    )
-  }
 
   getTogglerProps = ({onClick, ...props} = {}) => {
     return {
@@ -61,10 +61,10 @@ class Toggle extends React.Component {
 // component is intended to be used and is used in the tests.
 // You can make all the tests pass by updating the Toggle component.
 function Usage({
-                 initialOn = true,
-                 onToggle = (...args) => console.log('onToggle', ...args),
-                 onReset = (...args) => console.log('onReset', ...args),
-               }) {
+  initialOn = false,
+  onToggle = (...args) => console.log('onToggle', ...args),
+  onReset = (...args) => console.log('onReset', ...args),
+}) {
   return (
     <Toggle
       initialOn={initialOn}
