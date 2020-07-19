@@ -26,12 +26,22 @@ const callAll = (...fns) => (...args) =>
 class Toggle extends React.Component {
   static defaultProps = {
     initialOn: false,
-    onReset: () => {},
+    onReset: () => {
+    },
+    stateReducer: (state, changes) => changes,
     // 🐨 let's add a default stateReducer here. It should return
     // the changes object as it is passed.
   }
   initialState = {on: this.props.initialOn}
   state = this.initialState
+  internalSetState = (changes, callBack) => {
+    this.setState(currentState => {
+      return [changes]
+        .map(c => typeof c === 'function' ? c(currentState) : c)
+        .map(c => this.props.stateReducer(currentState, c) || {})
+        .map(c => Object.keys(c).length ? c : null)[0]
+    }, callBack)
+  }
   // 🐨 let's add a method here called `internalSetState`. It will simulate
   // the same API as `setState(updater, callback)`:
   // - updater: (changes object or function that returns the changes object)
@@ -49,11 +59,11 @@ class Toggle extends React.Component {
   // 🐨 Finally, update all pre-existing instances of this.setState
   // to this.internalSetState
   reset = () =>
-    this.setState(this.initialState, () =>
+    this.internalSetState(this.initialState, () =>
       this.props.onReset(this.state.on),
     )
   toggle = () =>
-    this.setState(
+    this.internalSetState(
       ({on}) => ({on: !on}),
       () => this.props.onToggle(this.state.on),
     )
@@ -62,6 +72,7 @@ class Toggle extends React.Component {
     'aria-pressed': this.state.on,
     ...props,
   })
+
   getStateAndHelpers() {
     return {
       on: this.state.on,
@@ -70,6 +81,7 @@ class Toggle extends React.Component {
       getTogglerProps: this.getTogglerProps,
     }
   }
+
   render() {
     return this.props.children(this.getStateAndHelpers())
   }
@@ -101,6 +113,7 @@ class Usage extends React.Component {
     }
     return changes
   }
+
   render() {
     const {timesClicked} = this.state
     return (
@@ -133,6 +146,7 @@ class Usage extends React.Component {
     )
   }
 }
+
 Usage.title = 'State Reducers'
 
 export {Toggle, Usage as default}
