@@ -4,52 +4,60 @@ import React from 'react'
 import {Switch} from '../switch'
 
 const callAll = (...fns) => (...args) =>
-  fns.forEach(fn => fn && fn(...args))
+  fns.forEach((fn) => fn && fn(...args))
 
 class Toggle extends React.Component {
   static defaultProps = {
     initialOn: false,
-    onReset: () => {},
+    onReset: () => {
+    },
     stateReducer: (state, changes) => changes,
+  }
+
+  static stateChangeTypes = {
+    toggle: '__toggle__',
+    reset: '__reset__',
   }
   initialState = {on: this.props.initialOn}
   state = this.initialState
-  internalSetState(changes, callback) {
-    this.setState(state => {
-      // handle function setState call
-      const changesObject =
-        typeof changes === 'function' ? changes(state) : changes
-      // apply state reducer
-      const reducedChanges =
-        this.props.stateReducer(state, changesObject) || {}
-      // 🐨  in addition to what we've done, let's pluck off the `type`
-      // property and return an object only if the state changes
-      // 💰 to remove the `type`, you can destructure the changes:
-      // `{type, ...c}`
-      return Object.keys(reducedChanges).length
-        ? reducedChanges
-        : null
-    }, callback)
+  internalSetState = (changes, callBack) => {
+    this.setState((currentState) => {
+      return [changes]
+        .map((c) => (typeof c === 'function' ? c(currentState) : c))
+        .map((c) => {
+          const {type: ignoredType, ...rest} = this.props.stateReducer(currentState, c) || {}
+          return rest
+        })
+        .map((c) => (Object.keys(c).length ? c : null))[0]
+    }, callBack)
   }
+  // 🐨  in addition to what we've done, let's pluck off the `type`
+  // property and return an object only if the state changes
+  // 💰 to remove the `type`, you can destructure the changes:
+  // `{type, ...c}`
   reset = () =>
     // 🐨 add a `type` string property to this call
-    this.internalSetState(this.initialState, () =>
-      this.props.onReset(this.state.on),
+    this.internalSetState(
+      () => {
+        return {type: Toggle.stateChangeTypes.reset, ...this.internalSetState}
+      },
+      () => this.props.onReset(this.state.on),
     )
   // 🐨 accept a `type` property here and give it a default value
-  toggle = () =>
+  toggle = ({type = Toggle.stateChangeTypes.toggle} = {}) =>
     this.internalSetState(
       // pass the `type` string to this object
-      ({on}) => ({on: !on}),
+      ({on}) => ({on: !on, type: type}),
       () => this.props.onToggle(this.state.on),
     )
   getTogglerProps = ({onClick, ...props} = {}) => ({
     // 🐨 change `this.toggle` to `() => this.toggle()`
     // to avoid passing the click event to this.toggle.
-    onClick: callAll(onClick, this.toggle),
+    onClick: callAll(onClick, () => this.toggle()),
     'aria-pressed': this.state.on,
     ...props,
   })
+
   getStateAndHelpers() {
     return {
       on: this.state.on,
@@ -58,6 +66,7 @@ class Toggle extends React.Component {
       getTogglerProps: this.getTogglerProps,
     }
   }
+
   render() {
     return this.props.children(this.getStateAndHelpers())
   }
@@ -92,6 +101,7 @@ class Usage extends React.Component {
     }
     return changes
   }
+
   render() {
     const {timesClicked} = this.state
     return (
@@ -129,6 +139,7 @@ class Usage extends React.Component {
     )
   }
 }
+
 Usage.title = 'State Reducers (with change types)'
 
 export {Toggle, Usage as default}

@@ -13,7 +13,8 @@ import {Switch} from '../switch'
 // with the ones we need to get our toggle functionality to work
 //
 // 💰 Here's a little utility that might come in handy
-// const callAll = (...fns) => (...args) => fns.forEach(fn => fn && fn(...args))
+const callAll = (...fns) => (...args) => fns.forEach(fn => fn && fn(...args))
+
 
 class Toggle extends React.Component {
   state = {on: false}
@@ -22,16 +23,19 @@ class Toggle extends React.Component {
       ({on}) => ({on: !on}),
       () => this.props.onToggle(this.state.on),
     )
+
   getStateAndHelpers() {
     return {
       on: this.state.on,
       toggle: this.toggle,
-      togglerProps: {
+      getTogglerProps: ({onClick, ...customProps}) => ({
+        onClick: callAll(onClick, this.toggle),
         'aria-pressed': this.state.on,
-        onClick: this.toggle,
-      },
+        ...customProps,
+      }),
     }
   }
+
   render() {
     return this.props.children(this.getStateAndHelpers())
   }
@@ -41,9 +45,9 @@ class Toggle extends React.Component {
 // component is intended to be used and is used in the tests.
 // You can make all the tests pass by updating the Toggle component.
 function Usage({
-  onToggle = (...args) => console.log('onToggle', ...args),
-  onButtonClick = () => console.log('onButtonClick'),
-}) {
+                 onToggle = (...args) => console.log('onToggle', ...args),
+                 onButtonClick = () => console.log('onButtonClick'),
+               }) {
   return (
     <Toggle onToggle={onToggle}>
       {({on, getTogglerProps}) => (
@@ -64,6 +68,7 @@ function Usage({
     </Toggle>
   )
 }
+
 Usage.title = 'Prop Getters'
 
 export {Toggle, Usage as default}
