@@ -56,15 +56,15 @@ class Toggle extends React.Component {
 
         const nonControlledChanges = Object.keys(
           combinedState,
-        ).reduce((newChanges, stateKey) => {
-          if (!this.isControlled(stateKey)) {
-            newChanges[stateKey] = onlyChanges.hasOwnProperty(
-              stateKey,
+        ).reduce((acc, item) => {
+          if (!this.isControlled(item)) {
+            acc[item] = onlyChanges.hasOwnProperty(
+              item,
             )
-              ? onlyChanges[stateKey]
-              : combinedState[stateKey]
+              ? onlyChanges[item]
+              : combinedState[item]
           }
-          return newChanges
+          return acc
         }, {})
 
         // return null if there are no changes to be made
