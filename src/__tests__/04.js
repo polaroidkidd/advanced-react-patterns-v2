@@ -1,7 +1,7 @@
 import React from 'react'
-import {renderToggle, fireEvent} from '../../test/utils'
-// import Usage from '../exercises-final/04'
-import Usage from '../exercises/04'
+import {renderToggle, Simulate} from '../../test/utils'
+import Usage from '../exercises-final/04'
+// import Usage from '../exercises/04'
 
 test('renders a toggle component', () => {
   const handleToggle = jest.fn()
@@ -21,7 +21,7 @@ test('can also toggle with the button', () => {
     <Usage onToggle={handleToggle} />,
   )
   expect(toggleButton).toBeOff()
-  fireEvent.click(getByLabelText('custom-button'))
+  Simulate.click(getByLabelText('custom-button'))
   expect(toggleButton).toBeOn()
   expect(handleToggle).toHaveBeenCalledTimes(1)
   expect(handleToggle).toHaveBeenCalledWith(true)
